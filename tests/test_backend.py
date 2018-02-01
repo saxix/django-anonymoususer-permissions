@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, unicode_literals
 
-from contextlib import ContextDecorator
+# from contextlib import ContextDecorator
 
 import pytest
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser, Permission
 from django.contrib.contenttypes.models import ContentType
 
+from anonymous_permissions import compat
 from anonymous_permissions.backend import get_anonymous_user
 
 pytestmarker = pytest.mark.djangodb
@@ -28,34 +29,42 @@ def test_get_all_permissions(anonymous, backend):
 def test_get_all_permissions_st(anonymous, backend):
     user = AnonymousUser()
     assert not backend.get_all_permissions(user)
+
     # again to check _perm_cache
     assert not backend.get_all_permissions(user)
 
 
 def test_login_success(rf, backend, admin_user):
     request = rf.post('/')
-    assert not backend.authenticate(request,
+    if compat.DJANGO_PRE_11:
+        assert backend.authenticate(username=admin_user.username,
+                                    password='password')
+    else:
+        assert backend.authenticate(request,
                                     username=admin_user.username,
                                     password='password')
 
 
 def test_login_fail(rf, backend):
     request = rf.post('/')
-    assert backend.authenticate(request,
-                                username=settings.ANONYMOUS_USERNAME) is None
+    if compat.DJANGO_PRE_11:
+        assert backend.authenticate(username=settings.ANONYMOUS_USERNAME) is None
+    else:
+        assert backend.authenticate(request,
+                                    username=settings.ANONYMOUS_USERNAME) is None
 
 
 def test_has_perm(anonymous, backend):
-    assert not backend.has_perm(anonymous, "auth.change_user")
+    assert not backend.has_perm(AnonymousUser(), "auth.change_user")
 
     with user_grant_permissions(anonymous, ["auth.change_user"]):
-        assert backend.has_perm(anonymous, "auth.change_user")
+        assert backend.has_perm(AnonymousUser(), "auth.change_user")
 
     anonymous.is_active = False
-    assert not backend.has_perm(anonymous, "auth.change_user")
+    assert not backend.has_perm(AnonymousUser(), "auth.change_user")
 
 
-class user_grant_permissions(ContextDecorator):  # noqa
+class user_grant_permissions(object):  # noqa
     caches = ['_group_perm_cache', '_user_perm_cache', '_dsspermissionchecker',
               '_officepermissionchecker', '_perm_cache', '_dss_acl_cache']
 

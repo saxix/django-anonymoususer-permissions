@@ -1,6 +1,7 @@
 """
 Management utility to create anonymous user.
 """
+from __future__ import unicode_literals
 import sys
 
 from django.conf import settings
@@ -24,7 +25,7 @@ class Command(BaseCommand):
     stealth_options = ('stdin',)
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(Command, self).__init__(*args, **kwargs)
         self.UserModel = get_user_model()
         self.username_field = self.UserModel._meta.get_field(self.UserModel.USERNAME_FIELD)
 
@@ -58,7 +59,7 @@ class Command(BaseCommand):
 
     def execute(self, *args, **options):
         self.stdin = options.get('stdin', sys.stdin)  # Used for testing
-        return super().execute(*args, **options)
+        return super(Command, self).execute(*args, **options)
 
     def handle(self, *args, **options):  # noqa
         if not hasattr(settings, 'ANONYMOUS_USERNAME'):

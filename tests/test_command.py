@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, unicode_literals
 
-from io import StringIO
+from six import StringIO
 
 import pytest
 from django.core.management import call_command
