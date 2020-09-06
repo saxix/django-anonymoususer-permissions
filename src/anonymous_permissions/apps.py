@@ -18,5 +18,6 @@ class AnonymousPermissionsConfig(AppConfig):
 
 
 def disable_anon_user_password_save(sender, instance, **kwargs):
-    if instance.username == settings.ANONYMOUS_USERNAME:
-        instance.passwork = make_password(None)
+    field = getattr(instance, instance.USERNAME_FIELD)
+    if field == settings.ANONYMOUS_USERNAME:
+        instance.password = make_password(None)
