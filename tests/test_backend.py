@@ -9,6 +9,7 @@ from django.contrib.auth.models import AnonymousUser, Permission
 from django.contrib.contenttypes.models import ContentType
 
 from anonymous_permissions import compat
+from anonymous_permissions.apps import caches
 from anonymous_permissions.backend import get_anonymous_user
 
 pytestmarker = pytest.mark.djangodb
@@ -65,18 +66,23 @@ def test_has_perm(anonymous, backend):
 
 
 class user_grant_permissions(object):  # noqa
-    caches = ['_group_perm_cache', '_user_perm_cache', '_dsspermissionchecker',
-              '_officepermissionchecker', '_perm_cache', '_dss_acl_cache']
+    caches = caches
 
-    def __init__(self, user, permissions=None):
+    def __init__(self, user, permissions=None, clear_caches=False):
         self.user = user
         self.permissions = permissions
         self._added = []
+        self._clear_caches = clear_caches
 
-    def __enter__(self):
+    def clear_caches(self):
         for cache in self.caches:
             if hasattr(self.user, cache):
                 delattr(self.user, cache)
+
+    def __enter__(self):
+        if self._clear_caches:
+            self.clear_caches()
+
         for permission_name in self.permissions:
             try:
                 app_label, codename = permission_name.split('.')
@@ -89,6 +95,7 @@ class user_grant_permissions(object):  # noqa
                                                 codename=codename)
             self._added.append(permission.id)
             self.user.user_permissions.add(permission)
+            self.user.save()
         return self.user
 
     def __exit__(self, e_typ, e_val, trcbak):
