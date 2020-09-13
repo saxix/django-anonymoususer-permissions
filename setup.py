@@ -25,6 +25,7 @@ setup(
     author='Stefano Apostolico',
     author_email='s.apostolico@gmail.com',
     license="MIT",
+    long_description=codecs.open('README.rst').read(),
     description='Small backend to grant permission to Anonymous using django admin interface',
     package_dir={'': 'src'},
     packages=find_packages('src'),
