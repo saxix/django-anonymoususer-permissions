@@ -1,4 +1,10 @@
-Release 0.1 (dev)
+Release 0.2
 -----------------
+* Add support Django 3.x
+* Drop support Django 1.x
+* Drop support Python < 3.5
 
+
+Release 0.1
+-----------------
 * Initial release

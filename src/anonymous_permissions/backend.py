@@ -8,7 +8,6 @@ from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.hashers import make_password
 
 from anonymous_permissions import compat
-from anonymous_permissions.compat import is_anonymous
 
 logger = logging.getLogger(__name__)
 
@@ -34,25 +33,19 @@ def createanonymoususer(**user_data):
 class AnonymousUserBackend(ModelBackend):
 
     def get_all_permissions(self, user_obj, obj=None):
-        if is_anonymous(user_obj):
+        if user_obj.is_anonymous:
             if not hasattr(user_obj, '_perm_cache'):
                 anon_user = get_anonymous_user()
                 user_obj._perm_cache = self.get_all_permissions(anon_user)
             return user_obj._perm_cache
         return super(AnonymousUserBackend, self).get_all_permissions(user_obj)
 
-    if compat.DJANGO_PRE_11:
-        def authenticate(self, username=None, password=None, **kwargs):
-            if username == settings.ANONYMOUS_USERNAME:
-                return None
-            return super(AnonymousUserBackend, self).authenticate(username, password, **kwargs)
-    else:
-        def authenticate(self, request, username=None, password=None, **kwargs):
-            if username == settings.ANONYMOUS_USERNAME:
-                return None
-            return super(AnonymousUserBackend, self).authenticate(request, username, password, **kwargs)
+    def authenticate(self, request, username=None, password=None, **kwargs):
+        if username == settings.ANONYMOUS_USERNAME:
+            return None
+        return super(AnonymousUserBackend, self).authenticate(request, username, password, **kwargs)
 
     def has_perm(self, user_obj, perm, obj=None):
-        if not user_obj.is_active and not is_anonymous(user_obj):
+        if not user_obj.is_active and not user_obj.is_anonymous:
             return False
         return perm in self.get_all_permissions(user_obj)

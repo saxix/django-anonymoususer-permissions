@@ -1,4 +1,4 @@
-django-webtest
+django-webtest>1.9.6
 factory_boy
 pytest
 pytest-cov

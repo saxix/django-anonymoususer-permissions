@@ -8,7 +8,6 @@ from django.conf import settings
 from django.contrib.auth.models import AnonymousUser, Permission
 from django.contrib.contenttypes.models import ContentType
 
-from anonymous_permissions import compat
 from anonymous_permissions.apps import caches
 from anonymous_permissions.backend import get_anonymous_user
 
@@ -37,21 +36,14 @@ def test_get_all_permissions_st(anonymous, backend):
 
 def test_login_success(rf, backend, admin_user):
     request = rf.post('/')
-    if compat.DJANGO_PRE_11:
-        assert backend.authenticate(username=admin_user.username,
-                                    password='password')
-    else:
-        assert backend.authenticate(request,
-                                    username=admin_user.username,
-                                    password='password')
+    assert backend.authenticate(request,
+                                username=admin_user.username,
+                                password='password')
 
 
 def test_login_fail(rf, backend):
     request = rf.post('/')
-    if compat.DJANGO_PRE_11:
-        assert backend.authenticate(username=settings.ANONYMOUS_USERNAME) is None
-    else:
-        assert backend.authenticate(request,
+    assert backend.authenticate(request,
                                     username=settings.ANONYMOUS_USERNAME) is None
 
 
